@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="오늘의 근무">
@@ -140,6 +140,15 @@ cursor:pointer;border:1px solid #2c3444;background:#212734;color:#e8eaed}
 .msg.err{color:#ff9b9b}
 .msg.good{color:#7ee2ab}
 .src{font-size:10px;color:#5d6778;text-align:center;margin-top:14px;white-space:pre-line;line-height:1.7;padding:0 14px}
+
+/* 폭만 늘리지 않고 화면 전체를 동일 비율로 확대 */
+body{display:block;overflow-x:auto}
+#phone{width:var(--base-width,430px);max-width:none;margin-left:auto;margin-right:auto;zoom:var(--app-zoom,1)}
+.zoomtools{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin:0 0 9px}
+.zoomtools button{background:#212734;color:#cdd6e6;border:1px solid #3d4a6b;border-radius:7px;font-size:11px;font-weight:700;min-width:30px;padding:5px 8px;cursor:pointer;touch-action:manipulation}
+.zoomtools button:disabled{opacity:.35;cursor:default}
+.zoomtools button:focus-visible{outline:2px solid #7fb3ff;outline-offset:2px}
+.zoomtools .zoomreset{min-width:56px}
 </style></head><body>
 <div id="phone">
 <header>
@@ -148,6 +157,11 @@ cursor:pointer;border:1px solid #2c3444;background:#212734;color:#e8eaed}
 <div class="hbtns">
 <span class="todaybtn" id="todaybtn">오늘</span>
 </div>
+</div>
+<div class="zoomtools" role="group" aria-label="화면 확대 및 축소">
+<button type="button" id="zoomMinus" aria-label="화면 축소">−</button>
+<button type="button" id="zoomReset" class="zoomreset" aria-label="100퍼센트로 초기화">100%</button>
+<button type="button" id="zoomPlus" aria-label="화면 확대">+</button>
 </div>
 <div id="monthTabs" class="month-tabs" style="display:none"></div><div class="dwrap">
 <div class="arw" id="prev">‹</div>
@@ -206,4 +220,27 @@ function render(){const out=document.getElementById('out');out.innerHTML='';GROU
 function todayButton(){const b=document.getElementById('todaybtn');b.textContent='今日'.replace('今日','오늘');b.onclick=()=>{const t=new Date();setDay(t.getDate(),true)};}
 function initSlider(){const e=document.getElementById('dates');e.addEventListener('click',x=>{const c=x.target.closest('.dchip');if(c)setDay(+c.dataset.d,true)});document.getElementById('prev').onclick=()=>setDay(curD-1,true);document.getElementById('next').onclick=()=>setDay(curD+1,true);document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')setDay(curD-1,true);if(e.key==='ArrowRight')setDay(curD+1,true)})}
 initDay();head();buildMonths();buildDates();render();todayButton();initSlider();
+
+function initZoom(){
+ const phone=document.getElementById('phone');let scale=1,maxScale=1;
+ try{const stored=Number(localStorage.getItem('duty-view-zoom'));if(stored>=0.8&&stored<=2)scale=stored}catch(e){}
+ function apply(){
+  const available=document.documentElement.clientWidth;
+  const base=Math.min(430,available);
+  maxScale=Math.min(2,Math.floor((available/base)*10)/10);
+  scale=Math.max(0.8,Math.min(scale,maxScale));
+  phone.style.setProperty('--base-width',base+'px');
+  phone.style.setProperty('--app-zoom',String(scale));
+  document.getElementById('zoomReset').textContent=Math.round(scale*100)+'%';
+  document.getElementById('zoomMinus').disabled=scale<=0.8;
+  document.getElementById('zoomPlus').disabled=scale>=maxScale;
+  document.getElementById('zoomPlus').title='화면 폭 안에서 최대 '+Math.round(maxScale*100)+'%';
+  try{localStorage.setItem('duty-view-zoom',String(scale))}catch(e){}
+ }
+ document.getElementById('zoomMinus').onclick=()=>{scale=Math.max(0.8,Math.round((scale-0.1)*10)/10);apply()};
+ document.getElementById('zoomPlus').onclick=()=>{scale=Math.min(maxScale,Math.round((scale+0.1)*10)/10);apply()};
+ document.getElementById('zoomReset').onclick=()=>{scale=1;apply()};
+ window.addEventListener('resize',apply);apply();
+}
+initZoom();
 </script></body></html>
