@@ -181,6 +181,16 @@ body{display:block;overflow-x:auto}
 #personal .pnum{font-size:calc(10px + 2pt)}
 
 #personal .pevent.pd-leave{color:#6edb8f}
+
+/* 개인 달력: 요일 아래와 주 사이에만 얇은 가로선 */
+#personal .pweekday{border-bottom:1px solid rgba(166,185,214,.28)}
+#personal .pgrid>.pday:nth-child(n+15){border-top:1px solid rgba(166,185,214,.18)}
+
+/* 개인 캘린더 요일: 기존 11px에서 4pt 확대 */
+#personal .pweekday{font-size:calc(11px + 2pt)}
+
+#personal .pgrid>.pweekday:nth-child(6){color:#85ceff}
+#personal .pgrid>.pweekday:nth-child(7){color:#ff606b}
 </style></head><body>
 <div id="phone">
 <header>
