@@ -189,12 +189,12 @@ body{display:block;overflow-x:auto}
 /* 개인 캘린더 요일: 기존 11px에서 4pt 확대 */
 #personal .pweekday{font-size:calc(11px + 2pt)}
 
-#personal .pgrid>.pweekday:nth-child(6){font-weight:700}
+#personal .pgrid> .pweekday:nth-child(1){font-weight:700}
 #personal .pgrid>.pweekday:nth-child(7){font-weight:700}
 
-/* 개인 캘린더: 토·일 열의 배경만 은은하게 어둡게 */
-#personal .pgrid > :nth-child(7n+6),
-#personal .pgrid > :nth-child(7n+7){background-color:rgba(255,255,255,.045)}
+/* 개인 캘린더: 일요일 옅은 레드, 토요일 옅은 블루 */
+#personal .pgrid > :nth-child(7n+1){background-color:rgba(255,105,120,.085)}
+#personal .pgrid > :nth-child(7n+7){background-color:rgba(105,170,255,.085)}
 
 /* 개인 화면 상단: 기존 여백에 20pt와 안전 영역 추가 */
 #personal{padding-top:calc(14px + 20pt + env(safe-area-inset-top, 0px))}
@@ -313,7 +313,7 @@ function personalEvents(m,name,day){return m.rows.filter(r=>personName(r,day)===
 function openPersonal(name){
  savedScroll=window.scrollY;hiddenPersonal=[];Array.from(document.getElementById('phone').children).forEach(el=>{if(el!==personalPanel&&el.tagName!=='SCRIPT'){hiddenPersonal.push([el,el.style.display]);el.style.display='none'}});
  const now=new Date();let h='<button class="backpersonal" type="button">← 전체 근무표로 돌아가기</button><h2 class="personal-title"><span class="personal-name">'+escapePersonal(name)+'</span><span class="personal-subtitle"> · 개인 근무표</span></h2>';
- Object.values(MONTHS).sort((a,b)=>a.year-b.year||a.month-b.month).forEach(m=>{let n=new Date(m.year,m.month,0).getDate(),offset=(new Date(m.year,m.month-1,1).getDay()+6)%7;h+='<section class="pmonth"><h3>'+m.year+'년 '+m.month+'월</h3><div class="pgrid">';['월','화','수','목','금','토','일'].forEach(w=>h+='<div class="pweekday">'+w+'</div>');for(let i=0;i<offset;i++)h+='<div class="pday"></div>';for(let d=1;d<=n;d++){const today=now.getFullYear()===m.year&&now.getMonth()+1===m.month&&now.getDate()===d;let events=personalEvents(m,name,d);h+='<div class="pday '+((offset+d-1)%7===6?'psunday':(offset+d-1)%7===5?'psaturday':'')+(holidayName(m.year,m.month,d)?' pholiday':'')+'"><span class="pnum '+(today?'today':'')+'">'+d+'</span>';h+=events.length?events.map(e=>'<div class="pevent '+(/휴가/.test(e.raw)?'pd-leave':e.duty==='일근'?'pd-day':e.duty==='야근'?'pd-night':e.duty==='조근'?'pd-early':e.raw==='X'?'pd-off':'')+'">'+escapePersonal(e.label)+'<br><span style="color:#91a1b9">'+escapePersonal(e.g)+(e.sub==='지원(시스템)'?' 지원':'')+'</span></div>').join(''):'<div class="pevent pempty">—</div>';h+='</div>'}for(let i=(offset+n)%7;i>0&&i<7;i++)h+='<div class="pday"></div>';h+='</div></section>'});
+ Object.values(MONTHS).sort((a,b)=>a.year-b.year||a.month-b.month).forEach(m=>{let n=new Date(m.year,m.month,0).getDate(),offset=new Date(m.year,m.month-1,1).getDay();h+='<section class="pmonth"><h3>'+m.year+'년 '+m.month+'월</h3><div class="pgrid">';['일','월','화','수','목','금','토'].forEach(w=>h+='<div class="pweekday">'+w+'</div>');for(let i=0;i<offset;i++)h+='<div class="pday"></div>';for(let d=1;d<=n;d++){const today=now.getFullYear()===m.year&&now.getMonth()+1===m.month&&now.getDate()===d;let events=personalEvents(m,name,d);h+='<div class="pday '+((offset+d-1)%7===0?'psunday':(offset+d-1)%7===6?'psaturday':'')+(holidayName(m.year,m.month,d)?' pholiday':'')+'"><span class="pnum '+(today?'today':'')+'">'+d+'</span>';h+=events.length?events.map(e=>'<div class="pevent '+(/휴가/.test(e.raw)?'pd-leave':e.duty==='일근'?'pd-day':e.duty==='야근'?'pd-night':e.duty==='조근'?'pd-early':e.raw==='X'?'pd-off':'')+'">'+escapePersonal(e.label)+'<br><span style="color:#91a1b9">'+escapePersonal(e.g)+(e.sub==='지원(시스템)'?' 지원':'')+'</span></div>').join(''):'<div class="pevent pempty">—</div>';h+='</div>'}for(let i=(offset+n)%7;i>0&&i<7;i++)h+='<div class="pday"></div>';h+='</div></section>'});
  h+='<div style="margin:16px 0 8px"><button class="backpersonal" type="button">← 전체 근무표로 돌아가기</button></div>';personalPanel.innerHTML=h;personalPanel.hidden=false;personalPanel.querySelectorAll('.backpersonal').forEach(button=>{button.onclick=()=>{personalPanel.hidden=true;hiddenPersonal.forEach(([el,display])=>el.style.display=display);window.scrollTo(0,savedScroll)}});window.scrollTo(0,0);
 }
 document.addEventListener('click',e=>{const el=e.target.closest('.pn,.vchip');if(!el)return;const name=Array.from(el.childNodes).filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();if(name)openPersonal(name)});
